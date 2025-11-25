@@ -48,6 +48,18 @@ Place the following files in the project root:
 - Notes: Add notes to controls
 - Reset: Option to reset the database
 
+## Data Source
+
+This project uses data from the [BSI Stand der Technik Bibliothek](https://www.bsi.bund.de/EN/Topics/ITGrundschutz/ITGrundschutzStandards/Stand_der_Technik_Bibliothek/stand_der_technik_node.html) by the German Federal Office for Information Security (BSI).
+
+### Original Data
+- **Source**: [Grundschutz++-Kompendium.json](https://github.com/BSI-Bund/Stand-der-Technik-Bibliothek/blob/main/Kompendien/Grundschutz%2B%2B-Kompendium/Grundschutz%2B%2B-Kompendium.json)
+- **License**: [BSI Open Data License](https://www.bsi.bund.de/EN/Service/OpenData/OpenData_License/open_data_license_node.html)
+- **Copyright**: © Bundesamt für Sicherheit in der Informationstechnik
+
+### Data Usage
+The data is used in accordance with the BSI's open data policy. Please refer to the [BSI Open Data](https://www.bsi.bund.de/EN/Service/OpenData/open_data_node.html) page for more information about usage rights and restrictions.
+
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
