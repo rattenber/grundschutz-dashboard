@@ -511,24 +511,69 @@ def main():
     if dark_mode:
         st.markdown("""
             <style>
+                /* Base dark theme */
                 .stApp {
                     background-color: #0E1117;
-                    color: #FAFAFA;
+                    color: #E0E0E0;
                 }
-                .st-bw {
-                    color: #FAFAFA !important;
+                
+                /* Text colors */
+                .st-bw, .st-ck, .st-cm, .st-dl, .st-bh, .st-bj, .st-bk, .st-bl, .st-bm {
+                    color: #E0E0E0 !important;
                 }
-                .st-ck {
-                    color: #FAFAFA !important;
-                }
-                .st-cm {
-                    color: #FAFAFA !important;
-                }
-                .st-dl {
-                    color: #FAFAFA !important;
-                }
-                .st-emotion-cache-1v0mbdj {
+                
+                /* Radio buttons */
+                .stRadio > div > div {
                     background-color: #1E1E1E;
+                    border-radius: 4px;
+                    padding: 10px;
+                }
+                .stRadio > div > label > div {
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    transition: all 0.2s;
+                }
+                .stRadio > div > label > div:hover {
+                    background-color: #2A2D35;
+                }
+                .stRadio > div > label > div[data-testid="stMarkdownContainer"] > p {
+                    color: #E0E0E0 !important;
+                }
+                
+                /* Cards and containers */
+                .st-emotion-cache-1v0mbdj, .control-card, .status-card {
+                    background-color: #1E1E1E !important;
+                    border-color: #333842 !important;
+                    color: #E0E0E0 !important;
+                }
+                
+                /* Status badges */
+                .status-erfuellt { border-left-color: #4CAF50 !important; background-color: #1B5E20 !important; }
+                .status-nicht-erfuellt { border-left-color: #F44336 !important; background-color: #B71C1C !important; }
+                .status-entbehrlich { border-left-color: #FFC107 !important; background-color: #FF8F00 !important; color: #212121 !important; }
+                
+                /* Input fields */
+                .stTextInput > div > div > input, 
+                .stSelectbox > div > div > div > div {
+                    background-color: #1E1E1E !important;
+                    color: #E0E0E0 !important;
+                    border-color: #555 !important;
+                }
+                
+                /* Sidebar */
+                .st-emotion-cache-1cyp6b1 {
+                    background-color: #1A1A1A;
+                }
+                
+                /* Tabs */
+                .stTabs [data-baseweb="tab"] {
+                    background-color: #1E1E1E;
+                    color: #E0E0E0;
+                }
+                .stTabs [aria-selected="true"] {
+                    background-color: #2A2D35;
+                    color: #4CAF50 !important;
+                    border-bottom: 2px solid #4CAF50;
                 }
             </style>
         """, unsafe_allow_html=True)
