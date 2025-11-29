@@ -472,18 +472,12 @@ def main():
         options=status_options
     )
     
-    # Debug: Show available fields in the first control
-    if processed_data['all_controls']:
-        first_control = processed_data['all_controls'][0]
-        st.sidebar.write("Debug - First control keys:", list(first_control.keys()))
-        st.sidebar.write("Debug - First control values:", first_control)
-    
-    # Effort level filter - Debug info
-    all_effort_levels = [c.get('effort_level', 'N/A') for c in processed_data['all_controls']]
-    st.sidebar.write("Debug - All effort levels:", all_effort_levels)
-    
-    effort_levels = sorted(list(set(lvl for lvl in all_effort_levels if lvl != 'N/A')))
-    st.sidebar.write("Unique effort levels:", effort_levels)
+    # Effort level filter
+    effort_levels = sorted(list(set(
+        c.get('effort_level') 
+        for c in processed_data['all_controls'] 
+        if c.get('effort_level')
+    )))
     
     if effort_levels:
         selected_efforts = st.sidebar.multiselect(
@@ -492,7 +486,6 @@ def main():
             default=[]
         )
     else:
-        st.sidebar.warning("Keine Aufwand-Daten gefunden. Bitte überprüfen Sie die Datenquelle.")
         selected_efforts = []
     
     # Search
