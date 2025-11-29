@@ -645,15 +645,20 @@ def main():
             # Reorder and rename columns
             df = df[list(column_mapping.keys())].rename(columns=column_mapping)
             
-            # Convert to CSV
-            csv = df.to_csv(index=False, sep=';', encoding='utf-8-sig')
+            # Ensure all string columns are properly encoded
+            for col in df.columns:
+                if df[col].dtype == 'object':
+                    df[col] = df[col].astype(str).str.encode('utf-8').str.decode('utf-8')
             
-            # Create download button
+            # Convert to CSV with proper encoding
+            csv = df.to_csv(index=False, sep=';', encoding='utf-8-sig', quotechar='"', quoting=1)
+            
+            # Create download button with explicit encoding
             st.sidebar.download_button(
                 label="⬇️ CSV herunterladen",
-                data=csv,
+                data=csv.encode('utf-8-sig'),
                 file_name=f'grundschutz_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
-                mime='text/csv',
+                mime='text/csv; charset=utf-8-sig',
                 key="download_button"
             )
         else:
