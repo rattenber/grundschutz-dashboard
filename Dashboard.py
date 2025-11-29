@@ -574,8 +574,19 @@ def main():
                 }
                 
                 /* Sidebar */
-                .st-emotion-cache-1cyp6b1 {
-                    background-color: #1A1A1A;
+                section[data-testid="stSidebar"] {
+                    background-color: #1A1A1A !important;
+                }
+                section[data-testid="stSidebar"] * {
+                    color: #E0E0E0 !important;
+                }
+                section[data-testid="stSidebar"] .stSelectbox > div > div > div,
+                section[data-testid="stSidebar"] .stTextInput > div > div > input,
+                section[data-testid="stSidebar"] .stRadio > div > div,
+                section[data-testid="stSidebar"] .stCheckbox > div > div,
+                section[data-testid="stSidebar"] .stButton > button {
+                    background-color: #2A2D35 !important;
+                    border-color: #444 !important;
                 }
                 
                 /* Tabs */
