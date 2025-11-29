@@ -349,6 +349,30 @@ def display_control_status(control_id: str) -> None:
         
         st.markdown("---")
         
+        # Notes section - always visible
+        st.markdown("### 📝 Bemerkungen")
+        
+        # Show different placeholder based on status
+        if status in ["erfuellt", "entbehrlich"]:
+            placeholder = "Bitte machen Sie Angaben zum Speicherort der Unterlagen, z.B. Links, Pfade usw."
+            notes_text = st.text_area(
+                "Bemerkungen (erforderlich)",
+                value=notes or "",
+                key=f"{control_id}_notes",
+                placeholder=placeholder,
+                help="Pflichtfeld für 'Erfüllt' und 'Entbehrlich'"
+            )
+        else:
+            placeholder = "Optionale Notizen..."
+            notes_text = st.text_area(
+                "Bemerkungen (optional)",
+                value=notes or "",
+                key=f"{control_id}_notes",
+                placeholder=placeholder
+            )
+            
+        st.markdown("---")
+        
         # Status selection section
         st.markdown("### 📊 Status auswählen")
         
@@ -379,23 +403,6 @@ def display_control_status(control_id: str) -> None:
             new_status = "nicht_erfuellt"
         elif selected_status == "Entbehrlich":
             new_status = "entbehrlich"
-            
-        # Show notes field if status is "Erfüllt" or "Entbehrlich"
-        notes_text = ""
-        if new_status in ["erfuellt", "entbehrlich"]:
-            notes_text = st.text_area(
-                "Bemerkungen (erforderlich)", 
-                value=notes or "",
-                key=f"{control_id}_notes",
-                placeholder="Bitte geben Sie hier die Begründung ein..."
-            )
-        elif new_status == "nicht_erfuellt":
-            notes_text = st.text_area(
-                "Bemerkungen (optional)", 
-                value=notes or "",
-                key=f"{control_id}_notes",
-                placeholder="Optionale Notizen..."
-            )
         
         # Submit button
         submit_button = st.form_submit_button(
