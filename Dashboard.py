@@ -427,39 +427,9 @@ def show_status_dashboard():
 def main():
     st.title("Grundschutz++ Compliance Dashboard")
     
-    # Debug section at the top
-    with st.expander("🔍 Debug Information", expanded=True):
-        st.write("This section helps us debug the effort levels in your data.")
-    
     # Load data
     with st.spinner("Lade Daten..."):
-        try:
-            data = load_data()
-            
-            # Show data loading debug info
-            with st.expander("🔍 Data Loading Debug", expanded=True):
-                st.write("Data loaded successfully!")
-                st.write("Data type:", type(data))
-                if data:
-                    st.write("Top-level keys in data:", list(data.keys()) if isinstance(data, dict) else "Not a dictionary")
-                    if 'catalog' in data:
-                        st.write("Catalog keys:", list(data['catalog'].keys()) if isinstance(data['catalog'], dict) else "Not a dictionary")
-                        
-                        # Show sample of controls if available
-                        if 'groups' in data['catalog'] and data['catalog']['groups']:
-                            first_group = data['catalog']['groups'][0]
-                            st.write("First group keys:", list(first_group.keys()))
-                            if 'controls' in first_group and first_group['controls']:
-                                first_control = first_group['controls'][0]
-                                st.write("First control keys:", list(first_control.keys()))
-                                st.write("First control:", first_control)
-                                
-                                # Check for effort levels in the first control
-                                if 'props' in first_control:
-                                    st.write("Control properties:", first_control['props'])
-        except Exception as e:
-            st.error(f"Error loading data: {str(e)}")
-            st.exception(e)  # This will show the full traceback
+        data = load_data()
     
     if not data:
         st.error("""
@@ -473,19 +443,6 @@ def main():
     # Process data
     try:
         processed_data = process_data(data)
-        
-        # Show processed data debug info
-        with st.expander("🔍 Processed Data Debug", expanded=False):
-            if 'all_controls' in processed_data and processed_data['all_controls']:
-                first_control = processed_data['all_controls'][0]
-                st.write("First control keys:", list(first_control.keys()))
-                st.write("First control values:", first_control)
-                
-                # Check for effort levels
-                effort_levels = list(set(c.get('effort_level', 'N/A') for c in processed_data['all_controls']))
-                st.write("Found effort levels:", effort_levels)
-            else:
-                st.warning("No controls found in processed data")
     except Exception as e:
         st.error(f"Fehler bei der Datenverarbeitung: {str(e)}")
         return
