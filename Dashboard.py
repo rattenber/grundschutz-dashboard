@@ -443,7 +443,7 @@ def get_status_badge(status: Optional[str]) -> str:
     return ""
 
 def display_control(control: Dict) -> None:
-    status, _ = get_control_status(control['id'])
+    status, _, _ = get_control_status(control['id'])
     status_class = f"status-{status.replace('_', '-')}" if status else ""
     
     # Create a card for the control
