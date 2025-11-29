@@ -577,7 +577,67 @@ def main():
     # Search
     search_term = st.sidebar.text_input("Suche", "").lower()
 
-        # Add reset button
+    # Add export button
+    st.sidebar.markdown("---")
+    if st.sidebar.button("📊 Als CSV exportieren"):
+        if 'filtered_controls' in locals() and filtered_controls:
+            import pandas as pd
+            from io import StringIO
+            
+            # Convert filtered controls to DataFrame
+            df = pd.DataFrame(filtered_controls)
+            
+            # Get status and notes for each control
+            status_notes = df['id'].apply(lambda x: get_control_status(x))
+            
+            # Add status and notes to the DataFrame
+            df['status'] = status_notes.apply(lambda x: x[0] or 'Ohne Status')
+            df['notes'] = status_notes.apply(lambda x: x[1] or '')
+            
+            # Add empty columns for additional fields
+            df['Verantwortlich'] = ''
+            df['Termin'] = ''
+            df['Begründung'] = ''
+            
+            # Select and reorder columns for export with German headers
+            column_mapping = {
+                'id': 'ID',
+                'title': 'Titel',
+                'group_title': 'Gruppe',
+                'subgroup_title': 'Untergruppe',
+                'effort_level': 'Aufwand',
+                'statement': 'Anforderung',
+                'guidance': 'Hinweise',
+                'class': 'Klasse',
+                'status': 'Status',
+                'Begründung': 'Begründung',
+                'notes': 'Notizen',
+                'Verantwortlich': 'Verantwortlich',
+                'Termin': 'Termin'
+            }
+            
+            # Ensure all required columns exist
+            for col in column_mapping.keys():
+                if col not in df.columns and col not in ['Begründung', 'Verantwortlich', 'Termin']:
+                    df[col] = ''
+            
+            # Reorder and rename columns
+            df = df[list(column_mapping.keys())].rename(columns=column_mapping)
+            
+            # Convert to CSV
+            csv = df.to_csv(index=False, sep=';', encoding='utf-8-sig')
+            
+            # Create download button
+            st.sidebar.download_button(
+                label="⬇️ CSV herunterladen",
+                data=csv,
+                file_name=f'grundschutz_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                mime='text/csv',
+            )
+        else:
+            st.sidebar.warning("Keine Daten zum Exportieren vorhanden.")
+
+    # Add reset button
     st.sidebar.markdown("---")
     if st.sidebar.checkbox("Datenbank zurücksetzen", key="show_reset"):
         if st.sidebar.button("⚠️ Bestätigen: Alle Daten löschen", 
