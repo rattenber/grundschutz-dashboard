@@ -298,62 +298,108 @@ def display_control_status(control_id: str) -> None:
     # Get current status, notes, and who last changed it
     status, notes, last_changed_by = get_control_status(control_id)
     
-    # Create a unique key for the radio button
-    status_key = f"{control_id}_status"
-    
-    # Default to empty string if no status is set
-    status_index = 0  # Default to first option
-    if status == "erfuellt":
-        status_index = 1
-    elif status == "nicht_erfuellt":
-        status_index = 2
-    elif status == "entbehrlich":
-        status_index = 3
-    
-    # Use radio button for status selection
-    status_options = ["Keine Auswahl", "Erfüllt", "Nicht erfüllt", "Entbehrlich"]
-    selected_status = st.radio(
-        "Status:",
-        options=status_options,
-        index=status_index,
-        key=status_key,
-        horizontal=True
-    )
-    
-    # Map the selected status to our internal values
-    new_status = None
-    if selected_status == "Erfüllt":
-        new_status = "erfuellt"
-    elif selected_status == "Nicht erfüllt":
-        new_status = "nicht_erfuellt"
-    elif selected_status == "Entbehrlich":
-        new_status = "entbehrlich"
-    
-    # Show name input with suggestions
-    previous_users = get_previous_users()
-    name_key = f"{control_id}_name"
-    
-    # If we have a last_changed_by, put it at the top of the suggestions
-    if last_changed_by and last_changed_by not in previous_users:
-        previous_users.insert(0, last_changed_by)
-    
-    # Create a selectbox with previous users as suggestions
-    if previous_users:
-        selected_name = st.selectbox(
-            "Ihr Name (erforderlich)",
-            options=[""] + previous_users,
-            format_func=lambda x: x if x else "-- Bitte auswählen --",
-            key=f"{control_id}_name_select"
+    # Create a form to handle the submission
+    with st.form(key=f'form_{control_id}'):
+        # Show who last changed this control (if any)
+        if last_changed_by:
+            st.caption(f"Zuletzt geändert von: {last_changed_by}")
+        
+        # Name input section - more prominent
+        st.subheader("Ihr Name")
+        previous_users = get_previous_users()
+        
+        # If we have a last_changed_by, put it at the top of the suggestions
+        if last_changed_by and last_changed_by not in previous_users:
+            previous_users.insert(0, last_changed_by)
+        
+        # Create a selectbox with previous users as suggestions
+        if previous_users:
+            selected_name = st.selectbox(
+                "Vorherige Namen",
+                options=[""] + previous_users,
+                format_func=lambda x: x if x else "-- Bitte auswählen --",
+                key=f"{control_id}_name_select",
+                help="Wählen Sie einen vorherigen Namen oder geben Sie unten einen neuen ein"
+            )
+        else:
+            selected_name = ""
+        
+        # Also allow free text input for new names
+        user_name = st.text_input(
+            "Neuer Name",
+            value=selected_name if selected_name else "",
+            key=f"{control_id}_name_input",
+            placeholder="Ihr vollständiger Name"
         )
-    else:
-        selected_name = ""
-    
-    # Also allow free text input for new names
-    user_name = st.text_input(
-        "oder neuen Namen eingeben",
-        value=selected_name if selected_name else "",
-        key=f"{control_id}_name_input"
-    )
+        
+        st.markdown("---")
+        
+        # Status selection
+        st.subheader("Status auswählen")
+        
+        # Default to empty string if no status is set
+        status_index = 0  # Default to first option
+        if status == "erfuellt":
+            status_index = 1
+        elif status == "nicht_erfuellt":
+            status_index = 2
+        elif status == "entbehrlich":
+            status_index = 3
+        
+        # Use radio button for status selection
+        status_options = ["Keine Auswahl", "Erfüllt", "Nicht erfüllt", "Entbehrlich"]
+        selected_status = st.radio(
+            "Status:",
+            options=status_options,
+            index=status_index,
+            key=f"{control_id}_status",
+            horizontal=True
+        )
+        
+        # Map the selected status to our internal values
+        new_status = None
+        if selected_status == "Erfüllt":
+            new_status = "erfuellt"
+        elif selected_status == "Nicht erfüllt":
+            new_status = "nicht_erfuellt"
+        elif selected_status == "Entbehrlich":
+            new_status = "entbehrlich"
+            
+        # Show notes field if status is "Erfüllt" or "Entbehrlich"
+        notes_text = ""
+        if new_status in ["erfuellt", "entbehrlich"]:
+            notes_text = st.text_area(
+                "Bemerkungen (erforderlich)", 
+                value=notes or "",
+                key=f"{control_id}_notes",
+                placeholder="Bitte geben Sie hier die Begründung ein..."
+            )
+        elif new_status == "nicht_erfuellt":
+            notes_text = st.text_area(
+                "Bemerkungen (optional)", 
+                value=notes or "",
+                key=f"{control_id}_notes",
+                placeholder="Optionale Notizen..."
+            )
+        
+        # Submit button
+        submit_button = st.form_submit_button(
+            "Speichern",
+            type="primary" if new_status and user_name.strip() else "secondary"
+        )
+        
+        # Handle form submission
+        if submit_button and new_status:
+            if not user_name.strip():
+                st.error("Bitte geben Sie Ihren Namen an.")
+            elif new_status in ["erfuellt", "entbehrlich"] and not notes_text.strip():
+                st.error("Bitte geben Sie eine Begründung an.")
+            else:
+                save_control_status(control_id, new_status, notes_text, user_name.strip())
+                st.success("Status erfolgreich gespeichert!"
+                           f"\n\n**Status:** {selected_status}"
+                           f"\n**Verantwortlich:** {user_name.strip()}")
+                st.rerun()
     
     # Show notes field if status is "Erfüllt" or "Entbehrlich"
     notes_text = ""
