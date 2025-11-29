@@ -427,9 +427,39 @@ def show_status_dashboard():
 def main():
     st.title("Grundschutz++ Compliance Dashboard")
     
+    # Debug section at the top
+    with st.expander("🔍 Debug Information", expanded=True):
+        st.write("This section helps us debug the effort levels in your data.")
+    
     # Load data
     with st.spinner("Lade Daten..."):
-        data = load_data()
+        try:
+            data = load_data()
+            
+            # Show data loading debug info
+            with st.expander("🔍 Data Loading Debug", expanded=True):
+                st.write("Data loaded successfully!")
+                st.write("Data type:", type(data))
+                if data:
+                    st.write("Top-level keys in data:", list(data.keys()) if isinstance(data, dict) else "Not a dictionary")
+                    if 'catalog' in data:
+                        st.write("Catalog keys:", list(data['catalog'].keys()) if isinstance(data['catalog'], dict) else "Not a dictionary")
+                        
+                        # Show sample of controls if available
+                        if 'groups' in data['catalog'] and data['catalog']['groups']:
+                            first_group = data['catalog']['groups'][0]
+                            st.write("First group keys:", list(first_group.keys()))
+                            if 'controls' in first_group and first_group['controls']:
+                                first_control = first_group['controls'][0]
+                                st.write("First control keys:", list(first_control.keys()))
+                                st.write("First control:", first_control)
+                                
+                                # Check for effort levels in the first control
+                                if 'props' in first_control:
+                                    st.write("Control properties:", first_control['props'])
+        except Exception as e:
+            st.error(f"Error loading data: {str(e)}")
+            st.exception(e)  # This will show the full traceback
     
     if not data:
         st.error("""
@@ -443,6 +473,19 @@ def main():
     # Process data
     try:
         processed_data = process_data(data)
+        
+        # Show processed data debug info
+        with st.expander("🔍 Processed Data Debug", expanded=False):
+            if 'all_controls' in processed_data and processed_data['all_controls']:
+                first_control = processed_data['all_controls'][0]
+                st.write("First control keys:", list(first_control.keys()))
+                st.write("First control values:", first_control)
+                
+                # Check for effort levels
+                effort_levels = list(set(c.get('effort_level', 'N/A') for c in processed_data['all_controls']))
+                st.write("Found effort levels:", effort_levels)
+            else:
+                st.warning("No controls found in processed data")
     except Exception as e:
         st.error(f"Fehler bei der Datenverarbeitung: {str(e)}")
         return
@@ -472,6 +515,29 @@ def main():
         options=status_options
     )
     
+    # Debug: Show available fields in the first control
+    if processed_data['all_controls']:
+        first_control = processed_data['all_controls'][0]
+        st.sidebar.write("Debug - First control keys:", list(first_control.keys()))
+        st.sidebar.write("Debug - First control values:", first_control)
+    
+    # Effort level filter - Debug info
+    all_effort_levels = [c.get('effort_level', 'N/A') for c in processed_data['all_controls']]
+    st.sidebar.write("Debug - All effort levels:", all_effort_levels)
+    
+    effort_levels = sorted(list(set(lvl for lvl in all_effort_levels if lvl != 'N/A')))
+    st.sidebar.write("Unique effort levels:", effort_levels)
+    
+    if effort_levels:
+        selected_efforts = st.sidebar.multiselect(
+            "Nach Aufwand filtern",
+            options=effort_levels,
+            default=[]
+        )
+    else:
+        st.sidebar.warning("Keine Aufwand-Daten gefunden. Bitte überprüfen Sie die Datenquelle.")
+        selected_efforts = []
+    
     # Search
     search_term = st.sidebar.text_input("Suche", "").lower()
 
@@ -491,6 +557,9 @@ def main():
     
     if selected_class:
         filtered_controls = [c for c in filtered_controls if c.get('class') in selected_class]
+    
+    if selected_efforts:
+        filtered_controls = [c for c in filtered_controls if c.get('effort_level') in selected_efforts]
     
     if search_term:
         filtered_controls = [
