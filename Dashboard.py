@@ -577,10 +577,42 @@ def main():
     # Search
     search_term = st.sidebar.text_input("Suche", "").lower()
 
-    # Add export button
+    # Add reset button
+    st.sidebar.markdown("---")
+    if st.sidebar.checkbox("Datenbank zurücksetzen", key="show_reset"):
+        if st.sidebar.button("⚠️ Bestätigen: Alle Daten löschen", 
+                           type="primary", 
+                           help="Klicken Sie hier, um alle Einträge zu löschen"):
+            reset_database()
+    
+    # Apply filters
+    filtered_controls = processed_data['all_controls']
+    
+    if selected_group != "Alle":
+        filtered_controls = [c for c in filtered_controls if c.get('group_title') == selected_group]
+    
+    if selected_class:
+        filtered_controls = [c for c in filtered_controls if c.get('class') in selected_class]
+    
+    if selected_status != "Alle":
+        filtered_controls = [c for c in filtered_controls if get_control_status(c['id'])[0] == selected_status]
+    
+    if selected_efforts:
+        filtered_controls = [c for c in filtered_controls if c.get('effort_level') in selected_efforts]
+    
+    if search_term:
+        filtered_controls = [
+            c for c in filtered_controls
+            if (search_term in c.get('title', '').lower() or
+                search_term in c.get('id', '').lower() or
+                search_term in c.get('statement', '').lower() or
+                search_term in c.get('guidance', '').lower())
+        ]
+    
+    # Add export button after filters are applied
     st.sidebar.markdown("---")
     if st.sidebar.button("📊 Als CSV exportieren"):
-        if 'filtered_controls' in locals() and filtered_controls:
+        if filtered_controls:
             import pandas as pd
             from io import StringIO
             
