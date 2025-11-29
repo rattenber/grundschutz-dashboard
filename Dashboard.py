@@ -41,6 +41,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Set theme configuration
+st.session_state.setdefault('dark_mode', False)
+
 # Custom CSS
 st.markdown("""
     <style>
@@ -453,6 +456,36 @@ def main():
     except Exception as e:
         st.error(f"Fehler bei der Datenverarbeitung: {str(e)}")
         return
+    
+    # Dark mode toggle
+    dark_mode = st.sidebar.toggle('Dark Mode', value=st.session_state.get('dark_mode', False))
+    st.session_state['dark_mode'] = dark_mode
+    
+    # Apply dark mode if enabled
+    if dark_mode:
+        st.markdown("""
+            <style>
+                .stApp {
+                    background-color: #0E1117;
+                    color: #FAFAFA;
+                }
+                .st-bw {
+                    color: #FAFAFA !important;
+                }
+                .st-ck {
+                    color: #FAFAFA !important;
+                }
+                .st-cm {
+                    color: #FAFAFA !important;
+                }
+                .st-dl {
+                    color: #FAFAFA !important;
+                }
+                .st-emotion-cache-1v0mbdj {
+                    background-color: #1E1E1E;
+                }
+            </style>
+        """, unsafe_allow_html=True)
     
     # Sidebar filters
     st.sidebar.header("Filter")
