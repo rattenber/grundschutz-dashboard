@@ -524,20 +524,33 @@ def main():
                 
                 /* Radio buttons */
                 .stRadio > div > div {
-                    background-color: #1E1E1E;
-                    border-radius: 4px;
-                    padding: 10px;
+                    background-color: #2A2D35;
+                    border-radius: 6px;
+                    padding: 8px;
+                    border: 1px solid #444;
                 }
                 .stRadio > div > label > div {
-                    padding: 8px 12px;
+                    padding: 8px 16px;
                     border-radius: 4px;
                     transition: all 0.2s;
+                    margin: 4px 0;
                 }
                 .stRadio > div > label > div:hover {
-                    background-color: #2A2D35;
+                    background-color: #3A3D45;
                 }
                 .stRadio > div > label > div[data-testid="stMarkdownContainer"] > p {
-                    color: #E0E0E0 !important;
+                    color: #FFFFFF !important;
+                    font-weight: 500;
+                    margin: 0;
+                }
+                /* Selected radio button */
+                .stRadio > div > label > div[data-baseweb="radio"] {
+                    background-color: #3A3D45;
+                }
+                /* Checked state */
+                .stRadio > div > label > div[data-baseweb="radio"]:has(input:checked) {
+                    background-color: #3A3D45;
+                    border-left: 3px solid #4CAF50;
                 }
                 
                 /* Cards and containers */
