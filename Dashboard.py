@@ -11,16 +11,23 @@ from datetime import datetime
 def init_db():
     conn = sqlite3.connect('grundschutz_status.db')
     c = conn.cursor()
-    # Create control_status table with changed_by field
+    
+    # Create control_status table if it doesn't exist
     c.execute('''
         CREATE TABLE IF NOT EXISTS control_status (
             control_id TEXT PRIMARY KEY,
             status TEXT,
             notes TEXT,
-            changed_by TEXT,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Check if changed_by column exists, if not add it
+    c.execute("PRAGMA table_info(control_status)")
+    columns = [column[1] for column in c.fetchall()]
+    if 'changed_by' not in columns:
+        c.execute('ALTER TABLE control_status ADD COLUMN changed_by TEXT')
+    
     # Create users table for name suggestions
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -29,6 +36,9 @@ def init_db():
             last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Enable foreign key constraints
+    c.execute('PRAGMA foreign_keys = ON')
     conn.commit()
     return conn
 
