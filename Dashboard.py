@@ -165,35 +165,81 @@ def process_data(data: Dict) -> Dict:
     groups = catalog.get('groups', [])
     all_controls = []
     
+    # Create a dictionary to store all parameters by ID
+    parameters = {}
+    
+    # First pass: collect all parameters
+    def collect_params(control):
+        for param in control.get('params', []):
+            param_id = param.get('id')
+            if param_id and 'label' in param:
+                parameters[param_id] = param['label']
+    
+    # Collect parameters from all controls
     for group in groups:
         # Process group-level controls
         for control in group.get('controls', []):
-            statement = next((part for part in control.get('parts', []) 
-                            if part.get('name') == 'statement'), {})
-            guidance = next((part for part in control.get('parts', []) 
-                           if part.get('name') == 'guidance'), {})
+            collect_params(control)
             
-            control_data = {
-                'id': control.get('id', ''),
-                'class': control.get('class', ''),
-                'title': control.get('title', ''),
-                'effort_level': next((prop['value'] for prop in control.get('props', []) 
-                                    if prop.get('name') == 'effort_level'), 'N/A'),
-                'statement': statement.get('prose', ''),
-                'guidance': guidance.get('prose', ''),
-                'group_id': group.get('id', ''),
-                'group_title': group.get('title', ''),
-                'type': 'group_control'
-            }
-            all_controls.append(control_data)
-        
         # Process subgroup controls
         for subgroup in group.get('groups', []):
             for control in subgroup.get('controls', []):
-                statement = next((part for part in control.get('parts', []) 
-                                if part.get('name') == 'statement'), {})
-                guidance = next((part for part in control.get('parts', []) 
-                               if part.get('name') == 'guidance'), {})
+                collect_params(control)
+    
+    # Function to process a single control with parameter replacement
+    def process_control(control, group_data, subgroup_data=None):
+        statement = next((part for part in control.get('parts', []) 
+                        if part.get('name') == 'statement'), {})
+        guidance = next((part for part in control.get('parts', []) 
+                       if part.get('name') == 'guidance'), {})
+        
+        # Process statement to replace parameter placeholders
+        statement_text = statement.get('prose', '')
+        if '{{' in statement_text and '}}' in statement_text:
+            import re
+            param_pattern = r'\{\{\s*insert:\s*param,\s*([^}]+)\s*\}\}'
+            
+            def replace_param(match):
+                param_id = match.group(1).strip()
+                # If parameter not found, show the ID in brackets
+                return parameters.get(param_id, f'[{param_id}]')
+            
+            statement_text = re.sub(param_pattern, replace_param, statement_text)
+        
+        control_data = {
+            'id': control.get('id', ''),
+            'class': control.get('class', ''),
+            'title': control.get('title', ''),
+            'effort_level': next((prop['value'] for prop in control.get('props', []) 
+                                if prop.get('name') == 'effort_level'), 'N/A'),
+            'statement': statement_text,
+            'guidance': guidance.get('prose', ''),
+            'group_id': group_data.get('id', ''),
+            'group_title': group_data.get('title', ''),
+            'type': 'group_control'
+        }
+        
+        if subgroup_data:
+            control_data.update({
+                'subgroup_id': subgroup_data.get('id', ''),
+                'subgroup_title': subgroup_data.get('title', ''),
+                'type': 'subgroup_control'
+            })
+            
+        return control_data
+    
+    # Process all controls with parameter replacement
+    for group in groups:
+        # Process group-level controls
+        for control in group.get('controls', []):
+            control_data = process_control(control, group)
+            all_controls.append(control_data)
+            
+        # Process subgroup controls
+        for subgroup in group.get('groups', []):
+            for control in subgroup.get('controls', []):
+                control_data = process_control(control, group, subgroup)
+                all_controls.append(control_data)
                 
                 control_data = {
                     'id': control.get('id', ''),
@@ -325,7 +371,23 @@ def display_control(control: Dict) -> None:
     
     with col1:
         st.markdown("### Anforderung")
-        st.markdown(control.get('statement', 'Keine Anforderung vorhanden.'))
+        statement = control.get('statement', 'Keine Anforderung vorhanden.')
+        
+        # Process parameter placeholders
+        if '{{' in statement and '}}' in statement:
+            # Extract all parameter placeholders
+            import re
+            param_pattern = r'\{\{\s*insert:\s*param,\s*([^}]+)\s*\}\}'
+            
+            # Replace each parameter with a styled version
+            def replace_param(match):
+                param_name = match.group(1).strip()
+                return f'<span style="background-color: #f0f0f0; padding: 0.2em 0.4em; border-radius: 4px; font-family: monospace;">[{param_name}]</span>'
+            
+            # Apply the replacement
+            statement = re.sub(param_pattern, replace_param, statement)
+        
+        st.markdown(statement, unsafe_allow_html=True)
     
     with col2:
         st.markdown("### Hinweise")
