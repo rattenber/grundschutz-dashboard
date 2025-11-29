@@ -877,9 +877,16 @@ def main():
         # Display metrics
         st.markdown("### Übersicht")
         total = len(processed_data['all_controls'])
-        erfuellt = sum(1 for c in processed_data['all_controls'] if get_control_status(c['id'])[0] == "erfuellt")
-        nicht_erfuellt = sum(1 for c in processed_data['all_controls'] if get_control_status(c['id'])[0] == "nicht_erfuellt")
-        entbehrlich = sum(1 for c in processed_data['all_controls'] if get_control_status(c['id'])[0] == "entbehrlich")
+        # Get all statuses in a single query for better performance
+        statuses = {}
+        for c in processed_data['all_controls']:
+            status, _, _ = get_control_status(c['id'])
+            statuses[c['id']] = status
+        
+        # Count statuses
+        erfuellt = sum(1 for status in statuses.values() if status == "erfuellt")
+        nicht_erfuellt = sum(1 for status in statuses.values() if status == "nicht_erfuellt")
+        entbehrlich = sum(1 for status in statuses.values() if status == "entbehrlich")
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
