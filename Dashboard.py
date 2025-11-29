@@ -335,13 +335,17 @@ def display_control_status(control_id: str) -> None:
         else:
             selected_name = ""
         
-        # Text input for new names
+        # Text input for new names - use the selected name as the default value
         user_name = st.text_input(
             "Name der verantwortlichen Person",
-            value=selected_name if selected_name else "",
+            value=selected_name,
             key=f"{control_id}_name_input",
             placeholder="Vorname Nachname"
         )
+        
+        # If a name is selected from the dropdown, use it as the user_name
+        if selected_name and selected_name.strip():
+            user_name = selected_name
         
         st.markdown("---")
         
