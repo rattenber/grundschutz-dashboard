@@ -290,25 +290,32 @@ def display_control(control: Dict) -> None:
     status, _ = get_control_status(control['id'])
     status_class = f"status-{status.replace('_', '-')}" if status else ""
     
-    # Build the control header
-    control_html = f"""
-    <div class="control-card {status_class}">
-        <div class="status-header">
-            <h4>{control.get('id', '')} - {control.get('title', 'N/A')}</h4>
-            {get_status_badge(status)}
-        </div>
-        <p><strong>Gruppe:</strong> {control.get('group_title', 'N/A')} | 
-           <strong>Klasse:</strong> {control.get('class', 'N/A')} | 
-           <strong>Aufwand:</strong> {control.get('effort_level', 'N/A')}</p>
-    """
-    
-    # Add subgroup if it exists
-    if control.get('subgroup_title'):
-        control_html += f"""<p><strong>Untergruppe:</strong> {control.get('subgroup_title', 'N/A')}</p>"""
-    
-    control_html += "</div>"
-    
-    st.markdown(control_html, unsafe_allow_html=True)
+    # Create a card for the control
+    with st.container():
+        st.markdown("---")
+        st.subheader(f"{control.get('id', '')} - {control.get('title', '')}")
+        
+        # Create columns for the metadata
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.caption("Gruppe")
+            st.text(control.get('group_title', 'N/A'))
+            
+        with col2:
+            st.caption("Klasse")
+            st.text(control.get('class', 'N/A'))
+            
+        with col3:
+            st.caption("Aufwand")
+            st.text(control.get('effort_level', 'N/A'))
+        
+        # Add subgroup if it exists
+        if control.get('subgroup_title'):
+            st.caption("Untergruppe")
+            st.text(control.get('subgroup_title', 'N/A'))
+        
+        st.markdown("---")
     
     # Display content in two columns
     col1, col2 = st.columns([1, 1])
