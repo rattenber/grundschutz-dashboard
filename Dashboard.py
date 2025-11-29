@@ -349,32 +349,8 @@ def display_control_status(control_id: str) -> None:
         
         st.markdown("---")
         
-        # Notes section - always visible
-        st.markdown("### 📝 Bemerkungen")
-        
-        # Show different placeholder based on status
-        if status in ["erfuellt", "entbehrlich"]:
-            placeholder = "Bitte machen Sie Angaben zum Speicherort der Unterlagen, z.B. Links, Pfade usw."
-            notes_text = st.text_area(
-                "Bemerkungen (erforderlich)",
-                value=notes or "",
-                key=f"{control_id}_notes",
-                placeholder=placeholder,
-                help="Pflichtfeld für 'Erfüllt' und 'Entbehrlich'"
-            )
-        else:
-            placeholder = "Optionale Notizen..."
-            notes_text = st.text_area(
-                "Bemerkungen (optional)",
-                value=notes or "",
-                key=f"{control_id}_notes",
-                placeholder=placeholder
-            )
-            
-        st.markdown("---")
-        
         # Status selection section
-        st.markdown("### 📊 Status auswählen")
+        st.markdown("### � Status auswählen")
         
         # Default to empty string if no status is set
         status_index = 0  # Default to first option
@@ -403,6 +379,33 @@ def display_control_status(control_id: str) -> None:
             new_status = "nicht_erfuellt"
         elif selected_status == "Entbehrlich":
             new_status = "entbehrlich"
+            
+        # Notes section - appears after status selection
+        st.markdown("---")
+        st.markdown("### � Bemerkungen")
+        
+        # Determine placeholder and required status based on selected status
+        if new_status == "erfuellt":
+            placeholder = "Bitte machen Sie Angaben zum Speicherort der Unterlagen, z.B. Links, Pfade usw."
+            label = "Bemerkungen (erforderlich)"
+            is_required = True
+        elif new_status == "entbehrlich":
+            placeholder = "Bitte begründen Sie Ihre Auswahl"
+            label = "Bemerkungen (erforderlich)"
+            is_required = True
+        else:
+            placeholder = "Optionale Notizen..."
+            label = "Bemerkungen (optional)"
+            is_required = False
+            
+        # Show the notes text area
+        notes_text = st.text_area(
+            label,
+            value=notes or "",
+            key=f"{control_id}_notes",
+            placeholder=placeholder,
+            help="Pflichtfeld für 'Erfüllt' und 'Entbehrlich'" if is_required else ""
+        )
         
         # Submit button
         submit_button = st.form_submit_button(
