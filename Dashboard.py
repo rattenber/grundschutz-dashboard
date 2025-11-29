@@ -11,12 +11,22 @@ from datetime import datetime
 def init_db():
     conn = sqlite3.connect('grundschutz_status.db')
     c = conn.cursor()
+    # Create control_status table with changed_by field
     c.execute('''
         CREATE TABLE IF NOT EXISTS control_status (
             control_id TEXT PRIMARY KEY,
             status TEXT,
             notes TEXT,
+            changed_by TEXT,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    # Create users table for name suggestions
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE,
+            last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     conn.commit()
@@ -143,19 +153,54 @@ def load_data():
         st.error(f"Error loading data: {str(e)}")
         return None
 
-def get_control_status(control_id: str) -> Tuple[Optional[str], Optional[str]]:
+def get_control_status(control_id: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    """
+    Get the status, notes, and name of the person who last changed the control
+    Returns: (status, notes, changed_by)
+    """
     c = db_conn.cursor()
-    c.execute('SELECT status, notes FROM control_status WHERE control_id = ?', (control_id,))
+    c.execute('SELECT status, notes, changed_by FROM control_status WHERE control_id = ?', (control_id,))
     result = c.fetchone()
-    return (result[0], result[1]) if result else (None, None)
+    if result:
+        # Handle potential None values in the database
+        return (result[0] if result[0] else None, 
+                result[1] if result[1] else None,
+                result[2] if len(result) > 2 and result[2] else None)
+    return (None, None, None)
 
-def save_control_status(control_id: str, status: str, notes: str = "") -> None:
+def get_previous_users() -> List[str]:
+    """Get a list of previously used user names, most recent first"""
     c = db_conn.cursor()
     c.execute('''
-        INSERT OR REPLACE INTO control_status (control_id, status, notes, updated_at)
-        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-    ''', (control_id, status, notes))
+        SELECT name FROM users 
+        ORDER BY last_used DESC
+        LIMIT 10
+    ''')
+    return [row[0] for row in c.fetchall()]
+
+def save_user_name(name: str) -> None:
+    """Save or update a user name with current timestamp"""
+    c = db_conn.cursor()
+    c.execute('''
+        INSERT INTO users (name, last_used) 
+        VALUES (?, CURRENT_TIMESTAMP)
+        ON CONFLICT(name) DO UPDATE SET last_used = CURRENT_TIMESTAMP
+    ''', (name,))
     db_conn.commit()
+
+def save_control_status(control_id: str, status: str, notes: str = "", changed_by: str = "") -> None:
+    """Save control status with the name of the person making the change"""
+    c = db_conn.cursor()
+    c.execute('''
+        INSERT OR REPLACE INTO control_status 
+        (control_id, status, notes, changed_by, updated_at)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ''', (control_id, status, notes, changed_by))
+    db_conn.commit()
+    
+    # Save the user name for future suggestions
+    if changed_by:
+        save_user_name(changed_by)
 
 def process_data(data: Dict) -> Dict:
     if not data:
@@ -250,7 +295,8 @@ def process_data(data: Dict) -> Dict:
     }
 
 def display_control_status(control_id: str) -> None:
-    status, notes = get_control_status(control_id)
+    # Get current status, notes, and who last changed it
+    status, notes, last_changed_by = get_control_status(control_id)
     
     # Create a unique key for the radio button
     status_key = f"{control_id}_status"
@@ -283,6 +329,32 @@ def display_control_status(control_id: str) -> None:
     elif selected_status == "Entbehrlich":
         new_status = "entbehrlich"
     
+    # Show name input with suggestions
+    previous_users = get_previous_users()
+    name_key = f"{control_id}_name"
+    
+    # If we have a last_changed_by, put it at the top of the suggestions
+    if last_changed_by and last_changed_by not in previous_users:
+        previous_users.insert(0, last_changed_by)
+    
+    # Create a selectbox with previous users as suggestions
+    if previous_users:
+        selected_name = st.selectbox(
+            "Ihr Name (erforderlich)",
+            options=[""] + previous_users,
+            format_func=lambda x: x if x else "-- Bitte auswählen --",
+            key=f"{control_id}_name_select"
+        )
+    else:
+        selected_name = ""
+    
+    # Also allow free text input for new names
+    user_name = st.text_input(
+        "oder neuen Namen eingeben",
+        value=selected_name if selected_name else "",
+        key=f"{control_id}_name_input"
+    )
+    
     # Show notes field if status is "Erfüllt" or "Entbehrlich"
     notes_text = ""
     if new_status in ["erfuellt", "entbehrlich"]:
@@ -300,13 +372,22 @@ def display_control_status(control_id: str) -> None:
             placeholder="Optionale Notizen..."
         )
     
-    # Save the status and notes if they've changed
-    if new_status and new_status != status or (notes_text and notes_text != notes):
-        # Only require notes for "erfüllt" and "entbehrlich"
-        if new_status in ["erfuellt", "entbehrlich"] and not notes_text.strip():
-            st.warning("Bitte geben Sie eine Begründung an.")
+    # Save button
+    save_button = st.button(
+        "Speichern",
+        key=f"{control_id}_save_button",
+        type="primary" if new_status else "secondary",
+        disabled=not new_status or (new_status in ["erfuellt", "entbehrlich"] and not notes_text.strip())
+    )
+    
+    # Save the status and notes if the save button is clicked
+    if save_button and new_status:
+        if not user_name.strip():
+            st.error("Bitte geben Sie Ihren Namen an.")
         else:
-            save_control_status(control_id, new_status, notes_text)
+            save_control_status(control_id, new_status, notes_text, user_name.strip())
+            # Show success message
+            st.success("Status erfolgreich gespeichert!")
             # Force a rerun to update the UI
             st.rerun()
 
