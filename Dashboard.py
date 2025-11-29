@@ -240,22 +240,6 @@ def process_data(data: Dict) -> Dict:
             for control in subgroup.get('controls', []):
                 control_data = process_control(control, group, subgroup)
                 all_controls.append(control_data)
-                
-                control_data = {
-                    'id': control.get('id', ''),
-                    'class': control.get('class', ''),
-                    'title': control.get('title', ''),
-                    'effort_level': next((prop['value'] for prop in control.get('props', []) 
-                                        if prop.get('name') == 'effort_level'), 'N/A'),
-                    'statement': statement.get('prose', ''),
-                    'guidance': guidance.get('prose', ''),
-                    'group_id': group.get('id', ''),
-                    'group_title': group.get('title', ''),
-                    'subgroup_id': subgroup.get('id', ''),
-                    'subgroup_title': subgroup.get('title', ''),
-                    'type': 'subgroup_control'
-                }
-                all_controls.append(control_data)
     
     return {
         'groups': groups,
