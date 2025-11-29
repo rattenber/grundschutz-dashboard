@@ -302,10 +302,12 @@ def display_control_status(control_id: str) -> None:
     with st.form(key=f'form_{control_id}'):
         # Show who last changed this control (if any)
         if last_changed_by:
-            st.caption(f"Zuletzt geändert von: {last_changed_by}")
+            st.info(f"👤 Zuletzt geändert von: {last_changed_by}")
         
-        # Name input section - more prominent
-        st.subheader("Ihr Name")
+        # Name input section - make it very visible
+        st.markdown("### 👤 Verantwortliche Person")
+        
+        # Get previous users for suggestions
         previous_users = get_previous_users()
         
         # If we have a last_changed_by, put it at the top of the suggestions
@@ -315,27 +317,26 @@ def display_control_status(control_id: str) -> None:
         # Create a selectbox with previous users as suggestions
         if previous_users:
             selected_name = st.selectbox(
-                "Vorherige Namen",
+                "Aus vorherigen Namen auswählen",
                 options=[""] + previous_users,
                 format_func=lambda x: x if x else "-- Bitte auswählen --",
-                key=f"{control_id}_name_select",
-                help="Wählen Sie einen vorherigen Namen oder geben Sie unten einen neuen ein"
+                key=f"{control_id}_name_select"
             )
         else:
             selected_name = ""
         
-        # Also allow free text input for new names
+        # Text input for new names
         user_name = st.text_input(
-            "Neuer Name",
+            "Name der verantwortlichen Person",
             value=selected_name if selected_name else "",
             key=f"{control_id}_name_input",
-            placeholder="Ihr vollständiger Name"
+            placeholder="Vorname Nachname"
         )
         
         st.markdown("---")
         
-        # Status selection
-        st.subheader("Status auswählen")
+        # Status selection section
+        st.markdown("### 📊 Status auswählen")
         
         # Default to empty string if no status is set
         status_index = 0  # Default to first option
@@ -401,22 +402,7 @@ def display_control_status(control_id: str) -> None:
                            f"\n**Verantwortlich:** {user_name.strip()}")
                 st.rerun()
     
-    # Show notes field if status is "Erfüllt" or "Entbehrlich"
-    notes_text = ""
-    if new_status in ["erfuellt", "entbehrlich"]:
-        notes_text = st.text_area(
-            "Bemerkungen (erforderlich)", 
-            value=notes or "",
-            key=f"{control_id}_notes",
-            placeholder="Bitte geben Sie hier die Begründung ein..."
-        )
-    elif new_status == "nicht_erfuellt":
-        notes_text = st.text_area(
-            "Bemerkungen (optional)", 
-            value=notes or "",
-            key=f"{control_id}_notes",
-            placeholder="Optionale Notizen..."
-        )
+    # This section was removed as it was a duplicate of the notes section inside the form
     
     # Save button
     save_button = st.button(
