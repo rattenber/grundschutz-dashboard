@@ -261,6 +261,11 @@ def process_data(data: Dict) -> Dict:
             
             statement_text = re.sub(param_pattern, replace_param, statement_text)
         
+        # Extract additional fields from props
+        def get_prop_value(part, prop_name):
+            return next((prop['value'] for prop in part.get('props', []) 
+                       if prop.get('name') == prop_name), None)
+        
         control_data = {
             'id': control.get('id', ''),
             'class': control.get('class', ''),
@@ -271,7 +276,15 @@ def process_data(data: Dict) -> Dict:
             'guidance': guidance.get('prose', ''),
             'group_id': group_data.get('id', ''),
             'group_title': group_data.get('title', ''),
-            'type': 'group_control'
+            'type': 'group_control',
+            # Extract additional fields from statement props
+            'ergebnis': get_prop_value(statement, 'ergebnis'),
+            'handlungsworte': get_prop_value(statement, 'handlungsworte'),
+            'präzisierung': get_prop_value(statement, 'präzisierung'),
+            'dokumentation': get_prop_value(statement, 'dokumentation'),
+            # Extract tags from control props
+            'tags': [prop['value'] for prop in control.get('props', []) 
+                    if prop.get('name') == 'tag']
         }
         
         if subgroup_data:
