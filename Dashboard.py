@@ -879,10 +879,15 @@ def main():
                 'guidance': 'Hinweise',
                 'class': 'Klasse',
                 'status': 'Status',
-                'Begründung': 'Begründung',
                 'notes': 'Notizen',
+                'ergebnis': 'Erwartetes Ergebnis',
+                'handlungsworte': 'Handlungsworte',
+                'präzisierung': 'Präzisierung',
+                'dokumentation': 'Dokumentation',
+                'tags': 'Tags',
                 'Verantwortlich': 'Verantwortlich',
-                'Termin': 'Termin'
+                'Termin': 'Termin',
+                'Begründung': 'Begründung'
             }
             
             # Ensure all required columns exist
