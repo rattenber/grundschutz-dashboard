@@ -485,9 +485,15 @@ def display_control(control: Dict) -> None:
             st.caption("Untergruppe")
             st.text(control.get('subgroup_title', 'N/A'))
         
+        # Display tags if they exist
+        tags = control.get('tags', [])
+        if tags:
+            st.caption("Tags")
+            st.write(", ".join(tags))
+            
         st.markdown("---")
     
-    # Display content in two columns
+    # Display content in columns
     col1, col2 = st.columns([1, 1])
     
     with col1:
@@ -496,7 +502,6 @@ def display_control(control: Dict) -> None:
         
         # Process parameter placeholders
         if '{{' in statement and '}}' in statement:
-            # Extract all parameter placeholders
             import re
             param_pattern = r'\{\{\s*insert:\s*param,\s*([^}]+)\s*\}\}'
             
@@ -509,10 +514,34 @@ def display_control(control: Dict) -> None:
             statement = re.sub(param_pattern, replace_param, statement)
         
         st.markdown(statement, unsafe_allow_html=True)
+        
+        # Display Handlungsworte if they exist
+        handlungsworte = control.get('handlungsworte')
+        if handlungsworte:
+            st.markdown("### Handlungsworte")
+            st.markdown(handlungsworte)
+            
+        # Display Präzisierung if it exists
+        praezisierung = control.get('präzisierung')
+        if praezisierung:
+            st.markdown("### Präzisierung")
+            st.markdown(praezisierung)
     
     with col2:
         st.markdown("### Hinweise")
         st.markdown(control.get('guidance', 'Keine Hinweise vorhanden.'))
+        
+        # Display Ergebnis if it exists
+        ergebnis = control.get('ergebnis')
+        if ergebnis:
+            st.markdown("### Erwartetes Ergebnis")
+            st.markdown(ergebnis)
+            
+        # Display Dokumentation if it exists
+        dokumentation = control.get('dokumentation')
+        if dokumentation:
+            st.markdown("### Dokumentation")
+            st.markdown(dokumentation)
     
     # Status selection
     with st.expander("Status setzen", expanded=status is not None):
